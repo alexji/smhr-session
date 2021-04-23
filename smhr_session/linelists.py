@@ -6,8 +6,8 @@ import astropy.units as u
 from astropy.io import ascii,fits,registry
 from astropy.table import Table, Column, MaskedColumn
 from astropy import table
-from .smhutils import element_to_species, species_to_element
-from .smhutils import elems_isotopes_ion_to_species, species_to_elems_isotopes_ion
+from .utils import element_to_species, species_to_element
+from .utils import elems_isotopes_ion_to_species, species_to_elems_isotopes_ion
 
 import os
 

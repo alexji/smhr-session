@@ -21,7 +21,7 @@ def read(filename):
 # Get the version information.
 here = path.abspath(path.dirname(__file__))
 vre = re_compile("__version__ = \"(.*?)\"")
-version = vre.findall(read(path.join(here, "smhr-session", "__init__.py")))[0]
+version = vre.findall(read(path.join(here, "smhr_session", "__init__.py")))[0]
 
 setup(
     name="smhr-session",
@@ -33,8 +33,8 @@ setup(
     license="MIT",
     packages=find_packages(exclude=["documents", "tests"]),
     install_requires=[
-        "numpy","pandas","astropy","scipy",
-        "six","seaborn","pyyaml"#,"astro-gala"
+        "numpy","astropy","scipy",
+        "six","pyyaml"
         ],
     extras_require={
         #"test": ["coverage"]

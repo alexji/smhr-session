@@ -11,7 +11,7 @@ __author__ = "Andy Casey <arc@ast.cam.ac.uk>"
 from numpy import array
 from .utils import element
 
-from ...smhutils import element_to_atomic_number, species_to_element
+from ..utils import element_to_atomic_number, species_to_element
 
 def asplund_2009(elements):
     """

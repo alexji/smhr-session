@@ -14,8 +14,8 @@ import subprocess
 #import tempfile
 
 from ...photospheres.abundances import asplund_2009 as solar_composition
-from ....smhutils import elems_isotopes_ion_to_species, element_to_atomic_number
-from ....smhutils import mkdtemp
+from ...utils import elems_isotopes_ion_to_species, element_to_atomic_number
+from ...utils import mkdtemp
 from six import iteritems, string_types
 
 logger = logging.getLogger(__name__)

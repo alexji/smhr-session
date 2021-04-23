@@ -17,8 +17,8 @@ from pkg_resources import resource_stream
 
 from . import utils
 from .utils import RTError
-from ....smhutils import element_to_species
-from .... import linelists
+from ...utils import element_to_species
+from ... import linelists
 
 logger = logging.getLogger(__name__)
 
