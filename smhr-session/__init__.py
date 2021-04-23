@@ -4,6 +4,8 @@
 from __future__ import (division, print_function, absolute_import,
                         unicode_literals)
 
+__version__ = "0.1.0"
+
 try:
     from . import radiative_transfer as rt
 except:
