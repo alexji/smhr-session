@@ -20,9 +20,9 @@ from scipy.ndimage import gaussian_filter
 from scipy import stats
 
 from .base import BaseSpectralModel
-from smh import utils
-from smh.specutils import Spectrum1D
-from smh.photospheres.abundances import asplund_2009 as solar_composition
+from .. import utils
+from ..specutils import Spectrum1D
+from ..photospheres.abundances import asplund_2009 as solar_composition
 # HACK TODO REVISIT SOLAR SCALE: Read from session defaults?
 from astropy.table import Table
 

@@ -13,7 +13,7 @@ import numpy as np
 from .quality_constraints import constraints
 from ..linelists import LineList
 from astropy.table import Row
-from smh.photospheres.abundances import asplund_2009 as solar_composition
+from ..photospheres.abundances import asplund_2009 as solar_composition
 
 class BaseSpectralModel(object):
 
