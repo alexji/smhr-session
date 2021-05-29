@@ -16,7 +16,10 @@ from six import string_types
 
 from collections import Counter, OrderedDict
 
-from subprocess import getstatusoutput
+try:
+    from subprocess import getstatusoutput
+except ImportError: # python 2
+    from commands import getstatusoutput
 from hashlib import sha1 as sha
 from random import choice
 from socket import gethostname, gethostbyname

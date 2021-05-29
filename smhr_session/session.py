@@ -777,6 +777,13 @@ class Session(BaseSession):
         return None
 
 
+    def initialize_normalization(self):
+        N = len(self.input_spectra)
+        self.metadata["normalization"] = {
+            "continuum": [None] * N,
+            "normalization_kwargs": [{}] * N
+        }
+
     def stitch_and_stack(self, **kwargs):
 
         normalized_orders = []
@@ -2031,3 +2038,25 @@ class Session(BaseSession):
             species_models.append(model)
         return all_models
     
+    def initialize_rv(self):
+        """
+        Set things up so the RV GUI doesn't error out
+        """
+        wavelength_region = self.setting(("rv", "wavelength_regions"))
+        resample = self.setting(("rv", "resample"))
+        apodize = self.setting(("rv", "apodize"))
+        normalization_kwargs = self.setting(("rv", "normalization"))
+        
+        template_spectrum_path = self.setting(("rv", "template_spectrum"))
+        template_spectrum = specutils.Spectrum1D.read(template_spectrum_path)
+        
+        self.metadata["rv"].update({
+            # Input settings
+            "template_spectrum_path": template_spectrum_path,
+            "template_spectrum": template_spectrum,
+            "wavelength_region": wavelength_region,
+            "resample": resample,
+            "apodize": apodize,
+            "normalization": normalization_kwargs.copy()
+        })
+        
