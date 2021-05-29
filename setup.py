@@ -6,7 +6,10 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path, system
 from re import compile as re_compile
-from urllib.request import urlretrieve
+try:
+    from urllib.request import urlretrieve
+except:
+    from urllib import urlretrieve
 
 # For convenience.
 if sys.argv[-1] == "publish":
