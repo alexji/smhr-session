@@ -16,10 +16,7 @@ from six import string_types
 
 from collections import Counter, OrderedDict
 
-try:
-    from subprocess import getstatusoutput
-except ImportError: # python 2
-    from commands import getstatusoutput
+from subprocess import getstatusoutput
 from hashlib import sha1 as sha
 from random import choice
 from socket import gethostname, gethostbyname
@@ -303,6 +300,37 @@ def approximate_stellar_jacobian(stellar_parameters, *args):
     return full_jacobian.T
 
 
+# E. Holmbeck added this jacobian to be used for solving only vt and feh.
+# No idea if it's implemented properly...
+def approximate_feh_jacobian(stellar_parameters, *args):
+    """ Approximate the Jacobian of vt and feh and
+    minimisation parameters, based on calculations from the Sun """
+
+    logger.info("Updated approximation of the Jacobian")
+	
+    params_to_optimize = args[0]
+	
+    jacobian_params = [np.nan]*4
+    next_param = 0
+    # There must be a cleaner way to do this...
+    for pi,p in enumerate(params_to_optimize):
+        if p==True:
+            jacobian_params[pi] = stellar_parameters[next_param]
+            next_param += 1
+
+    teff, vt, logg, feh = jacobian_params
+
+    full_jacobian = np.array([
+        [ 5.4393e-08*teff - 4.8623e-04, -7.2560e-02*vt + 1.2853e-01,  1.6258e-02*logg - 8.2654e-02,  1.0897e-02*feh - 2.3837e-02],
+        [ 4.2613e-08*teff - 4.2039e-04, -4.3985e-01*vt + 8.0592e-02, -5.7948e-02*logg - 1.2402e-01, -1.1533e-01*feh - 9.2341e-02],
+        [-3.2710e-08*teff + 2.8178e-04,  3.8185e-03*vt - 1.6601e-02, -1.2006e-02*logg - 3.5816e-03, -2.8592e-05*feh + 1.4257e-03],
+        [-1.7822e-08*teff + 1.8250e-04,  3.5564e-02*vt - 1.1024e-01, -1.2114e-02*logg + 4.1779e-02, -1.8847e-02*feh - 1.0949e-01]
+    ])
+
+    full_jacobian = full_jacobian[params_to_optimize]
+    return full_jacobian.T[params_to_optimize]
+
+
 def approximate_sun_hermes_jacobian(stellar_parameters, *args):
     """
     Approximate the Jacobian of the stellar parameters and
@@ -383,12 +411,24 @@ def approximate_sun_hermes_jacobian_2(stellar_parameters, *args):
     return full_jacobian.T
 
 
+def _debytify(x):
+    if isinstance(x, bytes):
+        return x.decode("utf-8")
+    return x
+def _fix_bytes_dict(d):
+    new_dict = {}
+    for k,v in d.items():
+        sk = _debytify(k)
+        new_dict[sk] = v
+    return new_dict
+
 def element_to_species(element_repr):
     """ Converts a string representation of an element and its ionization state
     to a floating point """
     
+    element_repr = _debytify(element_repr)
     if not isinstance(element_repr, string_types):
-        raise TypeError("element must be represented by a string-type")
+        raise TypeError("element must be represented by a string-type {} {}".format(element_repr, type(element_repr)))
         
     if element_repr.count(" ") > 0:
         element, ionization = element_repr.split()[:2]
@@ -417,8 +457,9 @@ def element_to_atomic_number(element_repr):
         'Ti I', 'si'.
     """
     
+    element_repr = _debytify(element_repr)
     if not isinstance(element_repr,  string_types):
-        raise TypeError("element must be represented by a string-type")
+        raise TypeError("element must be represented by a string-type {} {}".format(element_repr, type(element_repr)))
     
     element = element_repr.title().strip().split()[0]
     try:
@@ -445,7 +486,7 @@ def species_to_element(species):
     representation of the element and its ionization state """
     
     if not isinstance(species, (float, int)):
-        raise TypeError("species must be represented by a floating point-type")
+        raise TypeError("species must be represented by a floating point-type {} {}".format(species, type(species)))
     
     if round(species,1) != species:
         # Then you have isotopes, but we will ignore that
@@ -469,13 +510,13 @@ def species_to_element(species):
     return "%s %s" % (element, "I" * ionization)
 
 
-def elems_isotopes_ion_to_species(elem1,elem2,isotope1,isotope2,ion):
+def elems_isotopes_ion_to_species(elem1,elem2,isotope1,isotope2,ion,as_str=False):
     Z1 = int(element_to_species(elem1.strip()))
     if isotope1==0: isotope1=''
     else: isotope1 = str(isotope1).zfill(2)
 
     if elem2.strip()=='': # Atom
-        mystr = "{}.{}{}".format(Z1,int(ion-1),isotope1)
+        mystr = "{}.{}{:03}".format(Z1,int(ion-1),int(isotope1))
     else: # Molecule
         #assert ion==1,ion
         Z2 = int(element_to_species(elem2.strip()))
@@ -509,6 +550,7 @@ def elems_isotopes_ion_to_species(elem1,elem2,isotope1,isotope2,ion):
         else:
             mystr = "{}{:02}.{}{}{}".format(Z2,Z1,int(ion-1),isotope2,isotope1)
 
+    if as_str: return mystr
     return float(mystr)
 
 def species_to_elems_isotopes_ion(species):
@@ -701,7 +743,8 @@ def process_session_uncertainties_lines(session, rhomat, minerr=0.001):
         
         # Estimate systematic error s
         s = s_old = 0.
-        s_max = 2.
+        #s_max = 2.
+        s_max = 3. # Updated to a larger value because it was not always converging.
         delta = struct2array(t["e_Teff","e_logg","e_vt","e_MH"].as_array())
         ex = t["e_stat"]
         for i in range(35):
@@ -716,7 +759,17 @@ def process_session_uncertainties_lines(session, rhomat, minerr=0.001):
             if func(0) < func(s_max):
                 s = 0
                 break
-            s = optimize.brentq(func, 0, s_max, xtol=.001)
+            try:
+                s = optimize.brentq(func, 0, s_max, xtol=.001)
+            except ValueError as e:
+                print("ERROR FOR SPECIES",species)
+                print(e)
+                print("s_max:",s_max)
+                print("func(0)",func(0))
+                print("func(s_max)",func(s_max))
+                print("Figure out what you should do to s_max here:")
+                import pdb; pdb.set_trace()
+                raise
             
             if np.abs(s_old - s) < 0.01:
                 break
