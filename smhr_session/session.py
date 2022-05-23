@@ -554,7 +554,7 @@ class Session(BaseSession):
         except KeyError:
             # Check in defaults.
             with open(self._default_settings_path, "rb") as fp:
-                default = yaml.load(fp)
+                default = yaml.load(fp, yaml.FullLoader)
 
             try:
                 for key in key_tree:
@@ -582,7 +582,7 @@ class Session(BaseSession):
 
         # Open the defaults.
         with open(self._default_settings_path, "rb") as fp:
-            defaults = yaml.load(fp)
+            defaults = yaml.load(fp, yaml.FullLoader)
 
         branch = defaults
         for key in key_tree[:-1]:
@@ -1768,7 +1768,7 @@ class Session(BaseSession):
 
     def make_summary_plot(self, figure=None):
         with open(self._default_settings_path, "rb") as fp:
-            defaults = yaml.load(fp)
+            defaults = yaml.load(fp, yaml.FullLoader)
         if "summary_figure" not in defaults:
             raise RuntimeError("Defaults file ({}) must have summary_figure".format(\
                     self._default_settings_path))
@@ -1779,7 +1779,7 @@ class Session(BaseSession):
                                        self.normalized_spectrum, figure)
     def make_ncap_summary_plot(self, figure=None):
         with open(self._default_settings_path, "rb") as fp:
-            defaults = yaml.load(fp)
+            defaults = yaml.load(fp, yaml.FullLoader)
         if "summary_figure_ncap" not in defaults:
             raise RuntimeError("Defaults file ({}) must have summary_figure".format(\
                     self._default_settings_path))

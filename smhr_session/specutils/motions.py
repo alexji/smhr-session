@@ -407,7 +407,7 @@ def corrections_from_headers(headers):
         raise NotImplementedError("no observatory dictionary exists yet")
 
         with resource_stream(__name__, "observatories.yaml") as fp:
-            observatories_dictionary = yaml.load(fp)
+            observatories_dictionary = yaml.load(fp, yaml.FullLoader)
 
         origin = origin.strip().lower()
         if origin not in observatories_dictionary:
